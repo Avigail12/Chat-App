@@ -51,6 +51,7 @@ async function selectAllEmployees(req, res) {
     let current_date = new Date();
     console.log(current_date);
     const message = {
+        id: 11,
         from_name: req.body.from_name,
         to_name: req.body.to_name,
         message: req.body.message,
@@ -99,19 +100,69 @@ async function post(req, res) {
         connectString: '100.100.100.19:1522/TIRGUL'
     });
 
-    connection.execute(`insert into MESSAGES (FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:${message.from_name},:${message.to_name},:${message.message},:${message.created_at},:${message.updated_at},:${message.key})`, 
-    message,{ autoCommit: true });
+    connection.execute(`insert into MESSAGES (ID,FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:${message.id},:${message.from_name},:${message.to_name},:${message.message},:${message.created_at},:${message.updated_at},:${message.key})`, 
+    message,{ autoCommit: true },
+    {outFormat:oracledb.OBJECT},
+    function(err){
+        if(err){
+            console.log(err);
+        }
+    });
+    if (connection) { // conn assignment worked, need to close
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log(err);
+        }
+      }
     return message;
   }
 
 //   const createSql =
 //  'insert into MESSAGES (FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:FROM_NAME,:TO_NAME,:MESSAGE,:CREATED_AT,:UPDATED_AT,:KEY,)'
-  
-//   module.exports.create = create;
 
   router.post('/', (req,res) => {
       console.log('post req');
         post(req,res)
+  })
+
+  const getDeleteSavedFolderStatus = async (req, res) => {
+    const { key } = req.params;
+    console.log(key);
+    var connection = await oracledb.getConnection({
+        user: 'course2',
+        password: 'course2#',
+        connectString: '100.100.100.19:1522/TIRGUL'
+    });
+    // await dbConnection.createPool();
+    // await dbConnection.init();
+    // oracledb.autoCommit = true;
+
+    if (key) {
+    console.log('enter');
+      const query = `DELETE FROM MESSAGES WHERE KEY=${key}`;
+      console.log('query');
+      const result = await connection.execute(query,[key],{ autoCommit: true });
+      // await connection.commit();
+  
+      console.log('#####  Generated Query  ###### \n' + query);
+
+      console.log('Result  =>  ' + result.rowsAffected);
+  
+      await connection.close();
+
+      return result.rowsAffected;
+    }
+  }
+
+  router.delete('/:key',(req,res) => {
+    const deleteStatus  = getDeleteSavedFolderStatus(req,res)
+    if(deleteStatus < 1){
+        return res
+        .status(404)
+        .json({ success: false, msg: `error` })
+    }
+    res.status(200).json({ success: true, data: 'Daleted was succesufully' })
   })
 
 module.exports = router
