@@ -25,5 +25,5 @@ async function checkConnection() {
   }
 }
 
-// checkConnection();
-module.exports = checkConnection
+//  checkConnection();
+ module.exports = checkConnection

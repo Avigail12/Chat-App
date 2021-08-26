@@ -2,18 +2,14 @@ const { debug } = require('console');
 const express = require('express')
 const oracledb = require('oracledb');
 const crypto = require("crypto");
+const dbConfig = require("../dbConfig");
 const router = express.Router();
 
 //get /MESSAGES
 async function selectAllEmployees(req, res) {
-    console.log('startttt');
-    try {
-      connection = await oracledb.getConnection({
-        user: 'course2',
-        password: 'course2#',
-        connectString: '100.100.100.19:1522/TIRGUL'
-      });
-  
+     try {
+      connection = await oracledb.getConnection(dbConfig);
+
       console.log('connected to database');
       // run query to get all employees
       result = await connection.execute(`SELECT * FROM MESSAGES`);
@@ -51,7 +47,6 @@ async function selectAllEmployees(req, res) {
     let current_date = new Date();
     console.log(current_date);
     const message = {
-        id: 11,
         from_name: req.body.from_name,
         to_name: req.body.to_name,
         message: req.body.message,
@@ -80,10 +75,9 @@ async function post(req, res) {
       let message = getMessageFromRec(req);
       message = await create(message);
   
-      res.status(201).json(message);
+      return res.status(201).json(message);
     } catch (err) {
-        console.log('error');
-      res.status(400).json(err);
+        return res.status(400).json(err);
     }
   }
 
@@ -94,27 +88,43 @@ async function post(req, res) {
 
     console.log(message);
     // const result = await database.simpleExecute(createSql, message);
-    var connection = await oracledb.getConnection({
-        user: 'course2',
-        password: 'course2#',
-        connectString: '100.100.100.19:1522/TIRGUL'
-    });
+    connection = await oracledb.getConnection(dbConfig);
 
-    connection.execute(`insert into MESSAGES (ID,FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:${message.id},:${message.from_name},:${message.to_name},:${message.message},:${message.created_at},:${message.updated_at},:${message.key})`, 
-    message,{ autoCommit: true },
-    {outFormat:oracledb.OBJECT},
-    function(err){
-        if(err){
-            console.log(err);
+    const sql = "INSERT INTO MESSAGES values (:from_name, :to_name, :message, :created_at, :updated_at)";
+
+// bindDefs is optional for IN binds but it is generally recommended.
+// Without it the data must be scanned to find sizes and types.
+    const options = {
+        autoCommit: true,
+        bindDefs: {
+            from_name: { type: oracledb.STRING, maxSize: 200 },
+            to_name: { type: oracledb.STRING, maxSize: 200 },
+            message: { type: oracledb.CLOB },
+            created_at: { type: oracledb.DB_TYPE_TIMESTAMP},
+            updated_at: { type: oracledb.DB_TYPE_TIMESTAMP },
         }
-    });
-    if (connection) { // conn assignment worked, need to close
-        try {
-          await connection.close();
-        } catch (err) {
-          console.log(err);
-        }
-      }
+    };
+    try {
+        const result = await connection.execute(sql, message, options);
+    } catch (error) {
+        console.log(error);
+    }
+
+    // connection.execute(`insert into MESSAGES (ID,FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:${message.id},:${message.from_name},:${message.to_name},:${message.message},:${message.created_at},:${message.updated_at},:${message.key})`, 
+    // message,{ autoCommit: true },
+    // {outFormat:oracledb.OBJECT},
+    // function(err){
+    //     if(err){
+    //         console.log(err);
+    //     }
+    // });
+    // if (connection) { // conn assignment worked, need to close
+    //     try {
+    //       await connection.close();
+    //     } catch (err) {
+    //       console.log(err);
+    //     }
+    //   }
     return message;
   }
 
@@ -122,30 +132,22 @@ async function post(req, res) {
 //  'insert into MESSAGES (FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:FROM_NAME,:TO_NAME,:MESSAGE,:CREATED_AT,:UPDATED_AT,:KEY,)'
 
   router.post('/', (req,res) => {
-      console.log('post req');
         post(req,res)
   })
 
   const getDeleteSavedFolderStatus = async (req, res) => {
     const { key } = req.params;
     console.log(key);
-    var connection = await oracledb.getConnection({
-        user: 'course2',
-        password: 'course2#',
-        connectString: '100.100.100.19:1522/TIRGUL'
-    });
+    connection = await oracledb.getConnection(dbConfig);
     // await dbConnection.createPool();
     // await dbConnection.init();
     // oracledb.autoCommit = true;
 
     if (key) {
-    console.log('enter');
-      const query = `DELETE FROM MESSAGES WHERE KEY=${key}`;
-      console.log('query');
+      const query = `DELETE FROM MESSAGES WHERE KEY='${key}'`;
       const result = await connection.execute(query,[key],{ autoCommit: true });
       // await connection.commit();
   
-      console.log('#####  Generated Query  ###### \n' + query);
 
       console.log('Result  =>  ' + result.rowsAffected);
   
