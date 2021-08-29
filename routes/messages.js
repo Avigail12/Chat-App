@@ -1,4 +1,4 @@
-const { debug } = require('console');
+const { debug, timeStamp } = require('console');
 const express = require('express')
 const oracledb = require('oracledb');
 const crypto = require("crypto");
@@ -64,7 +64,6 @@ async function getAllMessages(req, res) {
      } else {
         res.send(result.rows)
      }
- 
    }
  }
 
@@ -75,8 +74,11 @@ async function getAllMessages(req, res) {
     })
 
   function getMessageFromRec(req) {
+    // var timestamp = Number(new Date()) 
 
-    let current_date = new Date();
+    let current_date = +new Date
+    current_date = new Date();
+
     const message = {
         from_name: req.body.from_name,
         to_name: req.body.to_name,
@@ -90,8 +92,8 @@ async function getAllMessages(req, res) {
   
 async function post(req, res) {
     try {
-      let message = getMessageFromRec(req);
-      message = await create(message);
+        let message = getMessageFromRec(req);
+       message = await create(message);
   
       return res.status(201).json(message);
     } catch (err) {
@@ -102,53 +104,44 @@ async function post(req, res) {
   async function create(mess) {
     const message = Object.assign({}, mess);
 
-    message.key = crypto.randomBytes(4).toString("hex");
+    message.key = crypto.randomBytes(2).toString("hex");
 
     console.log(message);
     // const result = await database.simpleExecute(createSql, message);
     connection = await oracledb.getConnection(dbConfig);
 
-    const sql = "INSERT INTO MESSAGES (FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:from_name, :to_name, :message,TIMESTAMP :created_at,TIMESTAMP :updated_at)";
-
-// bindDefs is optional for IN binds but it is generally recommended.
-// Without it the data must be scanned to find sizes and types.
+     //const sql = "INSERT INTO MESSAGES (FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (?, ?, ?, ?, ?, ?)";
+    const sql = "INSERT INTO MESSAGES (FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:from_name, :to_name, :message, :created_at, :updated_at, :key)";
+    
     const options = {
         autoCommit: true,
-        bindDefs: {
-            from_name: { type: oracledb.STRING, maxSize: 200,dir:"BIND_IN" },
-            to_name: { type: oracledb.STRING, maxSize: 200,dir:"BIND_IN" },
-            message: { type: oracledb.CLOB,dir:"BIND_IN" },
-            created_at: { type: oracledb.DATE,dir:"BIND_IN"},
-            updated_at: { type: oracledb.DATE ,dir:"BIND_IN"},
-        }
     };
-    const binds = [
-         {  from_name:message.from_name, to_name: message.to_name, message: message.message, created_at: message.created_at, updated_at: message.updated_at}
-        // [message.from_name,message.to_name,message.message,message.created_at,message.updated_at],
-      ];
-
+    const binds = //[
+          {  from_name:message.from_name, to_name: message.to_name, message: message.message, created_at: message.created_at, updated_at: message.updated_at, key: message.key}
+         //[message.from_name,message.to_name,message.message,message.created_at,message.updated_at,message.key],
+      //];
+     
     try {
-        const result = await connection.execute(sql, binds,options);
+        console.log('starttt');
+        const result = await connection.execute(sql,  binds, options,
+            function(err){
+        if(err){
+            console.log(err);
+        }
+    });
+    if (connection) { // conn assignment worked, need to close
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log(err);
+        }
+      }
+        return message;
+        //  res.status(201).json(message);
     } catch (error) {
         console.log(error);
     }
-
-    // connection.execute(`insert into MESSAGES (ID,FROM_NAME,TO_NAME,MESSAGE,CREATED_AT,UPDATED_AT,KEY) values (:${message.id},:${message.from_name},:${message.to_name},:${message.message},:${message.created_at},:${message.updated_at},:${message.key})`, 
-    // message,{ autoCommit: true },
-    // {outFormat:oracledb.OBJECT},
-    // function(err){
-    //     if(err){
-    //         console.log(err);
-    //     }
-    // });
-    // if (connection) { // conn assignment worked, need to close
-    //     try {
-    //       await connection.close();
-    //     } catch (err) {
-    //       console.log(err);
-    //     }
-    //   }
-    return message;
+    
   }
 
 //   const createSql =
@@ -162,12 +155,10 @@ async function post(req, res) {
     const { key } = req.params;
     console.log(key);
     connection = await oracledb.getConnection(dbConfig);
-    // await dbConnection.createPool();
-    // await dbConnection.init();
-    // oracledb.autoCommit = true;
-
+    
     if (key) {
-      const query = `DELETE FROM MESSAGES WHERE KEY='${key}'`;
+    //   const query = `DELETE FROM MESSAGES WHERE KEY='${key}'`;
+      const query = `DELETE FROM MESSAGES WHERE KEY=:key`;
       const result = await connection.execute(query,[key],{ autoCommit: true });
       // await connection.commit();
   
