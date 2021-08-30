@@ -2,6 +2,7 @@ const oracledb = require('oracledb');
 const dbConfig = require("../dbConfig");
 const {getAllMessagesRepo,getMessageFromRec,create,getMessageRepo,deleteMessagesRepo} = require("../models/message");
 
+// get all Messages from db with filter params
 async function getAllMessages(req, res) {
 
     const { from_name, to_name, created_at} = req.query
@@ -39,6 +40,7 @@ async function getAllMessages(req, res) {
    }
  }
 
+ // get Message according to the key field
  async function getMessage(req, res) {
     const { key } = req.params;
 
@@ -54,7 +56,7 @@ async function getAllMessages(req, res) {
      }
    }
  }
-
+// create Message and save in db 
  async function createMessages(req, res) {
     try {
         if(!req.body.from_name){
@@ -76,7 +78,7 @@ async function getAllMessages(req, res) {
       return res.status(400).json({ status: "fail", message: err.message })
     }
   }
-
+// delete Message from db according to the key field
   async function deleteMessages(req, res) {
     const { key } = req.params;
 

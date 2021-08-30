@@ -2,6 +2,7 @@ const oracledb = require('oracledb');
 const crypto = require("crypto");
 const dbConfig = require("../dbConfig");
 
+// return all Messages from db with filter params
 async function getAllMessagesRepo(queryObject,bind) {
 
     const sql = ""
@@ -18,7 +19,7 @@ async function getAllMessagesRepo(queryObject,bind) {
      throw err;
    }
  }
- 
+  // return Message according to the key field 
  async function getMessageRepo(key) {
   try {
     connection = await oracledb.getConnection(dbConfig);
@@ -30,7 +31,7 @@ async function getAllMessagesRepo(queryObject,bind) {
    throw err;
  }
 }
-
+//delete Message from db according to the key field and return how many rows deleted 
 async function deleteMessagesRepo(key) {
   try {
     connection = await oracledb.getConnection(dbConfig);
@@ -49,7 +50,7 @@ async function deleteMessagesRepo(key) {
    throw err;
  }
 }
-
+// create message object for insert
  function getMessageFromRec(req) {
 
     let current_date = +new Date
@@ -65,7 +66,7 @@ async function deleteMessagesRepo(key) {
     };
     return message;
   }
-
+// create message and save in db, return the new message
   async function create(mess) {
     const message = Object.assign({}, mess);
 
