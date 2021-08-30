@@ -2,16 +2,53 @@ const oracledb = require('oracledb');
 const crypto = require("crypto");
 const dbConfig = require("../dbConfig");
 
-async function getAllMessagesRepo(conn) {
+async function getAllMessagesRepo(queryObject,bind) {
 
+    const sql = ""
     try {
-     result = await conn.execute(`SELECT * FROM MESSAGES`);
-     return result.rows
-
+      connection = await oracledb.getConnection(dbConfig);
+      if(queryObject){
+        const sql = `SELECT * FROM MESSAGES WHERE ${queryObject}`
+        result = await connection.execute(sql,bind);
+      }else{
+        result = await connection.execute(`SELECT * FROM MESSAGES`);
+      }
+      return result.rows
    } catch (err) {
-     return res.send(err.message);
+     throw err;
    }
  }
+ 
+ async function getMessageRepo(key) {
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    if(key){
+      result = await connection.execute(`SELECT * FROM MESSAGES WHERE KEY =:key`,[key]);
+    }
+    return result.rows
+ } catch (err) {
+   throw err;
+ }
+}
+
+async function deleteMessagesRepo(key) {
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+
+    const query = `select 1 FROM MESSAGES WHERE KEY=:key`;
+    result = await connection.execute(query,[key])
+    if(result.rows.length == 0){
+      return -1;
+    }
+    if(key){
+      const query = `DELETE FROM MESSAGES WHERE KEY=:key`;
+      result = await connection.execute(query,[key],{ autoCommit: true });
+    }
+    return result.rowsAffected
+ } catch (err) {
+   throw err;
+ }
+}
 
  function getMessageFromRec(req) {
 
@@ -67,4 +104,4 @@ async function getAllMessagesRepo(conn) {
     
   }
 
- module.exports = {getAllMessagesRepo,getMessageFromRec,create}
+ module.exports = {getAllMessagesRepo,getMessageFromRec,create,getMessageRepo,deleteMessagesRepo}
