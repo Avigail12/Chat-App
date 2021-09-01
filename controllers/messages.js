@@ -4,25 +4,19 @@ const {getAllMessagesRepo,getMessageFromRec,create,getMessageRepo,deleteMessages
 async function getAllMessages(req, res) {
 
     const { from_name, to_name, created_at} = req.query
-    var queryObject = ""
     var bind = {}
 
     if(from_name){
-        queryObject = `FROM_NAME = :from_name`
         bind.FROM_NAME = from_name
     }
     if(to_name){
-        if(queryObject) queryObject = `${queryObject} and `
-        queryObject += `TO_NAME = :to_name` 
         bind.TO_NAME = to_name
     }
     if(created_at){
-        if(queryObject) queryObject = `${queryObject} and `
-        queryObject += `CREATED_AT = :created_at` 
         bind.CREATED_AT = created_at
     }
     try {
-     rows = await getAllMessagesRepo(queryObject,bind)
+     rows = await getAllMessagesRepo(bind)
       return res.status(200).json({ status: "ok", payload: rows })
    } catch (err) {
         return res.status(400).json({ status: "fail", message: err.message })
@@ -56,6 +50,9 @@ async function getAllMessages(req, res) {
         let message = getMessageFromRec(req);
 
        message = await create(message);
+       if(!message){
+         return res.status(400).json({ status: "fail", message: `This message already exists` })
+       }
 
       return res.status(200).json({ status: "ok", payload: message })
 
