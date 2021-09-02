@@ -20,7 +20,6 @@ async function getAllMessagesRepo(bind) {
       // connection = await oracledb.getConnection(dbConfig);
       if(bind){
         rows = await knex.where(bind).select().from("MESSAGES").orderBy('ID','desc')
-         console.log(rows);
       }else{
         rows = await knex.select().from("MESSAGES").orderBy('ID','desc')
       }

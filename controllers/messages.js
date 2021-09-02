@@ -16,8 +16,14 @@ async function getAllMessages(req, res) {
         bind.CREATED_AT = created_at
     }
     try {
+
      rows = await getAllMessagesRepo(bind)
-      return res.status(200).json({ status: "ok", payload: rows })
+
+      return res.returnObject = {
+        statusCode:200, status: "ok", payload: rows
+      }
+        //res.status(200).json({ status: "ok", payload: rows })
+
    } catch (err) {
         return res.status(400).json({ status: "fail", message: err.message })
    } 
@@ -38,6 +44,7 @@ async function getAllMessages(req, res) {
 // create Message and save in db 
  async function createMessages(req, res) {
     try {
+
         if(!req.body.from_name){
           return res.status(400).json({ status: "fail", message: `please provide a value to from_name field` })
         }   
@@ -48,7 +55,6 @@ async function getAllMessages(req, res) {
           return res.status(400).json({ status: "fail", message: `please provide a value to message field` })
         }        
         let message = getMessageFromRec(req);
-
        message = await create(message);
        if(!message){
          return res.status(400).json({ status: "fail", message: `This message already exists` })

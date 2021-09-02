@@ -2,6 +2,7 @@ const express = require('express')
 require('dotenv').config()
 const oracledb = require('oracledb'); 
 const messages = require('./routes/messages')
+const middleware = require('./middleware')
 
 const checkConnection = require('./checkConnection')
 
@@ -19,6 +20,7 @@ try {
 
 app.use(express.urlencoded({extended:false}))
 app.use(express.json())
+app.use(middleware)
 app.use('/api/messages', messages)
 
 
