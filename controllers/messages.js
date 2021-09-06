@@ -1,8 +1,7 @@
 const {getAllMessagesRepo,getMessageFromRec,create,getMessageRepo,deleteMessagesRepo} = require("../models/message");
 
 // get all Messages from db with filter params
-async function getAllMessages(req, res) {
-
+const getAllMessages = async(req, res, next) => {
     const { from_name, to_name, created_at} = req.query
     var bind = {}
 
@@ -16,16 +15,18 @@ async function getAllMessages(req, res) {
         bind.CREATED_AT = created_at
     }
     try {
-
      rows = await getAllMessagesRepo(bind)
-
-      return res.returnObject = {
+     res.returnObject = {
         statusCode:200, status: "ok", payload: rows
       }
+      next();
         //res.status(200).json({ status: "ok", payload: rows })
 
    } catch (err) {
-        return res.status(400).json({ status: "fail", message: err.message })
+        // return res.status(400).json({ status: "fail", message: err.message })
+        res.returnObject = {
+          statusCode:400, status: "fail", message: err.message
+        }
    } 
  }
 
@@ -86,3 +87,35 @@ async function getAllMessages(req, res) {
     createMessages,
     deleteMessages
   }
+
+//   
+
+
+
+// const getAllMessages = asyncWrapper(async(req, res) => {
+
+//   const { from_name, to_name, created_at} = req.query
+//   var bind = {}
+
+//   if(from_name){
+//       bind.FROM_NAME = from_name
+//   }
+//   if(to_name){
+//       bind.TO_NAME = to_name
+//   }
+//   if(created_at){
+//       bind.CREATED_AT = created_at
+//   }
+//     console.log('before');
+//    rows = await getAllMessagesRepo(bind)
+//    console.log('after');
+
+//     return res.returnObject = {
+//       statusCode:200, status: "ok", payload: rows
+//     }
+//       //res.status(200).json({ status: "ok", payload: rows })
+
+
+//       // return res.status(400).json({ status: "fail", message: err.message })
+
+// })

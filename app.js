@@ -2,7 +2,9 @@ const express = require('express')
 require('dotenv').config()
 const oracledb = require('oracledb'); 
 const messages = require('./routes/messages')
-const middleware = require('./middleware')
+const login = require('./routes/login')
+const middleware = require('./middleware/middleware')
+const {asyncMiddleware} = require('middleware-async')
 
 const checkConnection = require('./checkConnection')
 
@@ -20,8 +22,16 @@ try {
 
 app.use(express.urlencoded({extended:false}))
 app.use(express.json())
-app.use(middleware)
+
+// app.use(asyncMiddleware(async (req, res, next) => {
+  
+// }))
 app.use('/api/messages', messages)
+app.use('/api/login', login)
+
+app.use(async (req, res, next) => {
+  await middleware(req, res, next);
+})
 
 
 app.listen(PORT,(req,res) => {
