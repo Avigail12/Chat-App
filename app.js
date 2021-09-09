@@ -24,10 +24,8 @@ try {
 app.use(express.urlencoded({extended:false}))
 app.use(express.json())
 
-// app.use(asyncMiddleware(async (req, res, next) => {
-  
-// }))
-app.use('/api/messages', messages , auth)
+app.use(auth)
+app.use('/api/messages', messages)
 app.use('/api/login', login)
 
 app.use(async (req, res, next) => {

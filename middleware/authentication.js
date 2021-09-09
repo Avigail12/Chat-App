@@ -9,7 +9,7 @@ client.on('connect', function() {
   });
 
 const verifyToken = async (req, res, next) => {
-
+    if ( req.path == '/api/login') return next();
     const token = req.headers.authorization || req.headers["x-access-token"];
     if (!token) {
       return res.status(403).json({ status: "fail", message: "A token is required for authentication" })
