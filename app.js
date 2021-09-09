@@ -4,6 +4,7 @@ const oracledb = require('oracledb');
 const messages = require('./routes/messages')
 const login = require('./routes/login')
 const middleware = require('./middleware/middleware')
+const auth = require("./middleware/authentication");
 const {asyncMiddleware} = require('middleware-async')
 
 const checkConnection = require('./checkConnection')
@@ -26,7 +27,7 @@ app.use(express.json())
 // app.use(asyncMiddleware(async (req, res, next) => {
   
 // }))
-app.use('/api/messages', messages)
+app.use('/api/messages', messages , auth)
 app.use('/api/login', login)
 
 app.use(async (req, res, next) => {
